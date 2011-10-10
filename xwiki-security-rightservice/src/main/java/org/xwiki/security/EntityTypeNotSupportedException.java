@@ -25,7 +25,7 @@ import org.xwiki.model.EntityType;
 /**
  * Thrown when attempting to load a right for an unsupported entity type.
  * 
- * @version $Id$
+ * @version $Id: EntityTypeNotSupportedException.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class EntityTypeNotSupportedException extends RightServiceException
 {

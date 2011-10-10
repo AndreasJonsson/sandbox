@@ -30,10 +30,11 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 
-import org.xwiki.component.annotation.Requirement;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.phase.Initializable;
-import org.xwiki.component.logging.AbstractLogEnabled;
 
 import org.xwiki.security.RightCache;
 import org.xwiki.security.RightCacheConfiguration;
@@ -51,21 +52,29 @@ import java.util.LinkedList;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.slf4j.Logger;
+
 /**
  * A cache for fast access right checking.
- * @version $Id$
+ * @version $Id: DefaultRightCache.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component
-public class DefaultRightCache extends AbstractLogEnabled implements RightCache, Initializable
+@Singleton
+public class DefaultRightCache implements RightCache, Initializable
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** The keys in the cache are generated from instances of {@link EntityReference}. */
-    @Requirement("rightcachekey") private EntityReferenceSerializer<String> keySerializer;
+    @Inject
+    @Named("rightcachekey")
+    private EntityReferenceSerializer<String> keySerializer;
 
     /** The cache instance. */
     private Cache<RightCacheEntry> cache;
 
     /** Configuration object to acquire a configured cache instance. */
-    @Requirement private RightCacheConfiguration configuration;
+    @Inject private RightCacheConfiguration configuration;
 
     /**
      * The cache entries are arranged into a hierarchy.  This data
@@ -81,6 +90,7 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
     public void initialize()
     {
         cache = configuration.getCache();
+        logger.debug("Initiated cache of type " + cache.getClass().getName());
         cache.addCacheEntryListener(new Listener());
         configuration = null;
     }
@@ -179,9 +189,9 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
         List<RightCacheKey> parents = new LinkedList();
         parents.add(user);
         parents.add(entity);
-        getLogger().debug("Adding user at entity: "
-                          + user.getEntityReference() + ", "
-                          + entity.getEntityReference());
+        logger.debug("Adding user at entity: "
+                     + user.getEntityReference() + ", "
+                     + entity.getEntityReference());
         addEntry(generateKey(user, entity), parents, entry);
     }
 
@@ -293,7 +303,7 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
     @Override
     public RightCacheEntry get(RightCacheKey user, RightCacheKey entity)
     {
-        getLogger().debug("Getting " + user.getEntityReference() + " at " + entity.getEntityReference());
+        logger.debug("Getting " + user.getEntityReference() + " at " + entity.getEntityReference());
         readWriteLock.readLock().lock();
         try {
             return cache.get(generateKey(user, entity));
@@ -377,7 +387,7 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
         } else {
             parent = parentRelations.get(parentKey);
             if (parent == null) {
-                getLogger().debug("Parent entry was evicted.  Throwing exception.");
+                logger.debug("Parent entry was evicted.  Throwing exception.");
                 throw new ParentEntryEvictedException();
             }
             parent.addChild(key);
@@ -400,7 +410,7 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
         for (RightCacheKey ref : parentReferences) {
             Node parent = parentRelations.get(generateKey(ref));
             if (parent == null) {
-                getLogger().debug("One of the parent entries was evicted.  Throwing exception.");
+                logger.debug("One of the parent entries was evicted.  Throwing exception.");
                 throw new ParentEntryEvictedException();
             }
             parents.add(parent);
@@ -564,7 +574,7 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
         public void cacheEntryAdded(CacheEntryEvent<RightCacheEntry> event)
         {
             String key = event.getEntry().getKey();
-            getLogger().debug("Cache entry added: " + key);
+            logger.debug("Cache entry added: " + key);
         }
 
         /** {@inheritDoc} */
@@ -573,13 +583,13 @@ public class DefaultRightCache extends AbstractLogEnabled implements RightCache,
             String key = event.getEntry().getKey();
             removeChildren(key);
             removeParentRelation(key);
-            getLogger().debug("Cache entry removed: " + key);
+            logger.debug("Cache entry removed: " + key);
         }
 
         /** {@inheritDoc} */
         public void cacheEntryModified(CacheEntryEvent<RightCacheEntry> event)
         {
-            getLogger().debug("Got cache entry modified event for key " + event.getEntry().getKey());
+            logger.debug("Got cache entry modified event for key " + event.getEntry().getKey());
         }
     }
 }

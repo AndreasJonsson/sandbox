@@ -25,7 +25,7 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 
 /**
  * Java class corresponding to XWiki.XWikiGlobalRightsClass.
- * @version $Id$
+ * @version $Id: GlobalRightsObject.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class GlobalRightsObject extends AbstractRightsObject
 {

@@ -25,7 +25,7 @@ import org.xwiki.model.reference.DocumentReferenceResolver;
 
 /**
  * Java class corresponding to XWiki.XWikiRightsClass.
- * @version $Id$
+ * @version $Id: LocalRightsObject.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class LocalRightsObject extends AbstractRightsObject
 {

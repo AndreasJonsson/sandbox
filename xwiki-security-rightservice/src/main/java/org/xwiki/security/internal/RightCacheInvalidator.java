@@ -25,7 +25,7 @@ import org.xwiki.component.annotation.ComponentRole;
 /**
  * The instance of this class monitors updates and invalidates right
  * cache entries whenever necessary.
- * @version $Id$
+ * @version $Id: RightCacheInvalidator.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @ComponentRole
 public interface RightCacheInvalidator

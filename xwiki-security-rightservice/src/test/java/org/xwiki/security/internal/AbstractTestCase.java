@@ -27,6 +27,10 @@ import com.xpn.xwiki.web.Utils;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
+import org.xwiki.bridge.DocumentAccessBridge;
+
+import org.xwiki.component.descriptor.ComponentDescriptor;
+import org.xwiki.component.descriptor.DefaultComponentDescriptor;
 
 import org.junit.Before;
 import org.junit.runner.RunWith;
@@ -43,8 +47,8 @@ import com.xpn.xwiki.user.api.XWikiGroupService;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.xwiki.security.*;
 import static org.xwiki.security.Right.*;
@@ -56,7 +60,7 @@ public abstract class AbstractTestCase extends AbstractComponentTestCase
     /**
      * The logging tool.
      */
-    protected final Log LOG = LogFactory.getLog(this.getClass());
+    protected final Logger LOG = LoggerFactory.getLogger(this.getClass());
 
     protected RightResolver resolver;
 
@@ -74,6 +78,8 @@ public abstract class AbstractTestCase extends AbstractComponentTestCase
 
     protected RightCacheInvalidator invalidator;
 
+    protected DocumentAccessBridge mockDocumentAccessBridge;
+
     @Before
     public void initializeTests() throws Exception
     {
@@ -90,9 +96,15 @@ public abstract class AbstractTestCase extends AbstractComponentTestCase
             xwikiContext.setWiki(wiki);
             mockery = new JUnit4Mockery();
             mockGroupService = mockery.mock(XWikiGroupService.class);
+            mockDocumentAccessBridge = mockery.mock(DocumentAccessBridge.class);
             wiki.setGroupService(mockGroupService);
             execution.getContext().setProperty(XWikiContext.EXECUTIONCONTEXT_KEY, xwikiContext);
             invalidator = getComponentManager().lookup(RightCacheInvalidator.class);
+            DefaultComponentDescriptor desc = new DefaultComponentDescriptor();
+            desc.setRole(DocumentAccessBridge.class);
+            desc.setRoleHint("default");
+            desc.setImplementation(mockDocumentAccessBridge.getClass());
+            getComponentManager().registerComponent(desc, mockDocumentAccessBridge);
         } catch (Exception e) {
             LOG.error("Caught exception", e);
             throw e;

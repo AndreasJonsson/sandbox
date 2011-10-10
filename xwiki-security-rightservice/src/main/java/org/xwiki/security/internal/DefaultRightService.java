@@ -21,8 +21,6 @@
 package org.xwiki.security.internal;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
-import org.xwiki.component.logging.AbstractLogEnabled;
 
 import org.xwiki.security.RightService;
 import org.xwiki.security.RightServiceException;
@@ -41,6 +39,10 @@ import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import java.util.List;
 import java.util.Formatter;
 
@@ -49,28 +51,36 @@ import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.doc.XWikiDocument;
 import com.xpn.xwiki.user.api.XWikiUser;
 
+import org.slf4j.Logger;
+
 /**
  * The default right service.
  *
- * @version $Id$
+ * @version $Id: DefaultRightService.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component
-public class DefaultRightService extends AbstractLogEnabled implements RightService
+@Singleton
+public class DefaultRightService implements RightService
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** The cached rights. */
-    @Requirement private RightCache rightCache;
+    @Inject private RightCache rightCache;
 
     /** The loader for filling the cache. */
-    @Requirement private RightLoader rightLoader;
+    @Inject private RightLoader rightLoader;
 
     /** Resolver for document references. */
-    @Requirement private DocumentReferenceResolver<String> documentReferenceResolver;
+    @Inject private DocumentReferenceResolver<String> documentReferenceResolver;
 
     /** Resolver for user and group document references. */
-    @Requirement("user") private DocumentReferenceResolver<String> userAndGroupReferenceResolver;
+    @Inject
+    @Named("user")
+    private DocumentReferenceResolver<String> userAndGroupReferenceResolver;
 
     /** Serializer. */
-    @Requirement private EntityReferenceSerializer<String> entityReferenceSerializer;
+    @Inject private EntityReferenceSerializer<String> entityReferenceSerializer;
 
     /**
      * Convert an action to a right.
@@ -83,7 +93,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
         if (right == ILLEGAL)
         {
             Formatter f = new Formatter();
-            getLogger().error(f.format("No action named '%s'", action.toString()).toString());
+            logger.error(f.format("No action named '%s'", action.toString()).toString());
         }
         return right;
     }
@@ -115,7 +125,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
                     return null;
                 }
             } catch (XWikiException e) {
-                getLogger().error("Caught exception while authenticating user.", e);
+                logger.error("Caught exception while authenticating user.", e);
                 return null;
             }
 
@@ -145,7 +155,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
                 context.getWiki().getAuthService().showLogin(context);
             }
         } catch (XWikiException e) {
-            getLogger().error("Failed to show login page.", e);
+            logger.error("Failed to show login page.", e);
         }
     }
 
@@ -165,7 +175,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
      */
     public boolean checkAccess(String action, XWikiDocument doc, XWikiContext context) throws XWikiException
     {
-        getLogger().debug("checkAccess for action " + action);
+        logger.debug("checkAccess for action " + action);
 
         Right right = actionToRight(action);
 
@@ -217,12 +227,12 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
     {
         String wikiname = context.getDatabase();
         DocumentReference document = resolveDocName(docname, wikiname);
-        getLogger().debug("Resolved '" + docname + "' into " + document);
+        logger.debug("Resolved '" + docname + "' into " + document);
         DocumentReference user = resolveUserName(username, wikiname);
         Right right = Right.toRight(rightname);
         if (right == Right.ILLEGAL) {
             Formatter f = new Formatter();
-            getLogger().error(f.format("No such right: '%s'", rightname).toString());
+            logger.error(f.format("No such right: '%s'", rightname).toString());
         }
         return checkAccess(right, user, document, context);
     }
@@ -232,6 +242,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
      */
     public boolean hasProgrammingRights(XWikiContext context)
     {
+        logger.debug("hasProgrammingRights, sdoc: " + (context.get("sdoc")) + " context.getDoc(): " + context.getDoc());
         XWikiDocument sdoc = (XWikiDocument) context.get("sdoc");
         if (sdoc == null) {
             sdoc = context.getDoc();
@@ -283,7 +294,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
         try {
             accessLevel = getAccessLevel(user, entity);
         } catch (Exception e) {
-            getLogger().error("Failed to check admin right for user [" + context.getUser() + "]", e);
+            logger.error("Failed to check admin right for user [" + context.getUser() + "]", e);
             return false;
         }
 
@@ -330,7 +341,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
     {
         XWikiUser user = context.getXWikiUser();
         String username;
-        getLogger().debug("Getting user from context: " + user);
+        logger.debug("Getting user from context: " + user);
         if (user == null) {
             username = GUEST_USER_FULLNAME;
         } else {
@@ -357,10 +368,10 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
             if (entry == null) {
                 AccessLevel level = rightLoader.load(user, entity);
                 Formatter f = new Formatter();
-                getLogger().debug(f.format("1. Loaded a new entry for %s@%s into cache: %s",
-                                           entityReferenceSerializer.serialize(user),
-                                           entityReferenceSerializer.serialize(entity),
-                                           level).toString());
+                logger.debug(f.format("1. Loaded a new entry for %s@%s into cache: %s",
+                                      entityReferenceSerializer.serialize(user),
+                                      entityReferenceSerializer.serialize(entity),
+                                      level).toString());
                 return level;
             }
             switch (entry.getType()) {
@@ -371,24 +382,24 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
                     if (entry == null) {
                         AccessLevel level = rightLoader.load(user, entity);
                         Formatter f = new Formatter();
-                        getLogger().debug(f.format("2. Loaded a new entry for %s@%s into cache: %s",
-                                                   entityReferenceSerializer.serialize(user),
-                                                   entityReferenceSerializer.serialize(entity),
-                                                   level).toString());
+                        logger.debug(f.format("2. Loaded a new entry for %s@%s into cache: %s",
+                                              entityReferenceSerializer.serialize(user),
+                                              entityReferenceSerializer.serialize(entity),
+                                              level).toString());
                         return level;
                     } else {
                         if (entry.getType() == RightCacheEntry.Type.ACCESS_LEVEL) {
-                            getLogger().debug("Got cached entry for "
-                                      + entityReferenceSerializer.serialize(user)
-                                      + "@"
-                                      + entityReferenceSerializer.serialize(entity) + ": " + entry);
+                            logger.debug("Got cached entry for "
+                                         + entityReferenceSerializer.serialize(user)
+                                         + "@"
+                                         + entityReferenceSerializer.serialize(entity) + ": " + entry);
                             return (AccessLevel) entry;
                         } else {
                             Formatter f = new Formatter();
-                            getLogger().error(f.format("The cached entry for '%s' at '$s' was of incorrect type: %s", 
-                                                       user.toString(),
-                                                       ref.toString(),
-                                                       entry.getType().toString()).toString());
+                            logger.error(f.format("The cached entry for '%s' at '$s' was of incorrect type: %s", 
+                                                  user.toString(),
+                                                  ref.toString(),
+                                                  entry.getType().toString()).toString());
                             throw new RuntimeException();
                         }
                     }
@@ -396,14 +407,14 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
                     break;
                 default:
                     Formatter f = new Formatter();
-                    getLogger().error(f.format("The cached entry for '%s' was of incorrect type: %s", 
-                                               ref.toString(),
-                                               entry.getType().toString()).toString());
+                    logger.error(f.format("The cached entry for '%s' was of incorrect type: %s", 
+                                          ref.toString(),
+                                          entry.getType().toString()).toString());
                     throw new RuntimeException();
             }
         }
 
-        getLogger().debug("Returning default access level.");
+        logger.debug("Returning default access level.");
         return AccessLevel.DEFAULT_ACCESS_LEVEL;
     }
 
@@ -416,12 +427,12 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
      */
     private void logAllow(DocumentReference user, EntityReference entity, Right right, String info)
     {
-        if (getLogger().isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             String userName = entityReferenceSerializer.serialize(user);
             String docName = entityReferenceSerializer.serialize(entity);
             Formatter f = new Formatter();
-            getLogger().debug(f.format("Access has been granted for (%s,%s,%s): %s",
-                                       userName, docName, right.toString(), info).toString());
+            logger.debug(f.format("Access has been granted for (%s,%s,%s): %s",
+                                  userName, docName, right.toString(), info).toString());
         }
     }
 
@@ -434,12 +445,12 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
      */
     protected void logDeny(DocumentReference user, EntityReference entity,  Right right, String info)
     {
-        if (getLogger().isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             String userName = entityReferenceSerializer.serialize(user);
             String docName = entityReferenceSerializer.serialize(entity);
             Formatter f = new Formatter();
-            getLogger().info(f.format("Access has been denied for (%s,%s,%s): %s",
-                                      userName, docName, right.toString(), info).toString());
+            logger.info(f.format("Access has been denied for (%s,%s,%s): %s",
+                                 userName, docName, right.toString(), info).toString());
         }
     }
     
@@ -453,10 +464,10 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
      */
     protected void logDeny(String name, String resourceKey, String accessLevel, String info, Exception e)
     {
-        if (getLogger().isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             Formatter f = new Formatter();
-            getLogger().debug(f.format("Access has been denied for (%s,%s,%s) at %s",
-                                       name, resourceKey, accessLevel, info).toString(), e);
+            logger.debug(f.format("Access has been denied for (%s,%s,%s) at %s",
+                                  name, resourceKey, accessLevel, info).toString(), e);
         }
     }
 
@@ -476,7 +487,7 @@ public class DefaultRightService extends AbstractLogEnabled implements RightServ
                 }
             } catch (NumberFormatException e) {
                 Formatter f = new Formatter();
-                getLogger().warn(f.format("Failed to interpete preference value: '%s'", value).toString());
+                logger.warn(f.format("Failed to interpete preference value: '%s'", value).toString());
             }
         }
         return null;

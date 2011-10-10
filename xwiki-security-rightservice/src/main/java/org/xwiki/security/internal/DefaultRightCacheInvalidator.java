@@ -39,19 +39,26 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
-import org.xwiki.component.logging.AbstractLogEnabled;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+import org.slf4j.Logger;
 
 /**
  * The instance of this class monitors updates and invalidates right
  * cache entries whenever necessary.
- * @version $Id$
+ * @version $Id: DefaultRightCacheInvalidator.java 33813 2011-01-05 10:21:01Z AndreasJonsson $
  */
 @Component
-public class DefaultRightCacheInvalidator extends AbstractLogEnabled implements RightCacheInvalidator, EventListener
+@Singleton
+public class DefaultRightCacheInvalidator implements RightCacheInvalidator, EventListener
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** The right cache. */
-    @Requirement private RightCache rightCache;
+    @Inject private RightCache rightCache;
 
     /**
      * We use a fair read-write lock to suspend the delivery of
@@ -111,7 +118,7 @@ public class DefaultRightCacheInvalidator extends AbstractLogEnabled implements 
                 XWikiUtils.invalidateGroupMembers(ref, rightCache);
             }
         } catch (RightServiceException e) {
-            getLogger().error("Failed to invalidate group members on the document: " + ref, e);
+            logger.error("Failed to invalidate group members on the document: " + ref, e);
         } finally {
             readWriteLock.writeLock().unlock();
         }

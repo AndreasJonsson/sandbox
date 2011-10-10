@@ -29,34 +29,42 @@ import org.xwiki.cache.config.CacheConfiguration;
 import org.xwiki.cache.eviction.EntryEvictionConfiguration;
 import org.xwiki.cache.eviction.LRUEvictionConfiguration;
 
-import org.xwiki.component.annotation.Requirement;
 import org.xwiki.component.annotation.Component;
 import org.xwiki.component.annotation.InstantiationStrategy;
 import org.xwiki.configuration.ConfigurationSource;
-import org.xwiki.component.logging.AbstractLogEnabled;
 import static org.xwiki.component.descriptor.ComponentInstantiationStrategy.PER_LOOKUP;
 
 import org.xwiki.security.RightCacheConfiguration;
 import org.xwiki.security.RightCacheEntry;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+
+import org.slf4j.Logger;
+
 /**
  * Default configuration for right cache.
- * @version $Id$
+ * @version $Id: DefaultRightCacheConfiguration.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component
 @InstantiationStrategy(PER_LOOKUP)
-public class DefaultRightCacheConfiguration extends AbstractLogEnabled
-    implements RightCacheConfiguration
+public class DefaultRightCacheConfiguration implements RightCacheConfiguration
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** Prefix for the configuration property keys. */
     private static final String RIGHTCACHE_PREFIX = "security.rightcache.";
 
     /** Obtain configuration from the xwiki.properties file. */
-    @Requirement("xwikiproperties")
+    @Inject
+    @Named("xwikiproperties")
     private ConfigurationSource configuration;
 
     /** Cache factory. */
-    @Requirement("oscache") private CacheFactory cacheFactory;
+    @Inject
+    @Named("jbosscache")
+    private CacheFactory cacheFactory;
 
     /**
      * @param name Name of the property.
@@ -89,14 +97,14 @@ public class DefaultRightCacheConfiguration extends AbstractLogEnabled
         try {
             cache = cacheFactory.newCache(cacheConfig);
         } catch (CacheException e) {
-            getLogger().error("Failed to create rights cache.");
+            logger.error("Failed to create rights cache.");
             throw new RuntimeException(e);
         }
-        getLogger().info("Created a cache of type "
-                         + cache.getClass().getName()
-                         + " with a capacity of "
-                         + capacity
-                         + " entries.");
+        logger.info("Created a cache of type "
+                    + cache.getClass().getName()
+                    + " with a capacity of "
+                    + capacity
+                    + " entries.");
 
         return cache;
     }

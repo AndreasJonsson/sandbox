@@ -30,12 +30,17 @@ import com.xpn.xwiki.doc.XWikiDocument;
 
 import com.xpn.xwiki.web.Utils;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Class for plugging in to xwiki.
- * @version $Id$
+ * @version $Id: XWikiCachingRightService.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class XWikiCachingRightService implements XWikiRightService
 {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     /** The actual right service compoennt. */
     private final RightService rightService;
 
@@ -82,5 +87,16 @@ public class XWikiCachingRightService implements XWikiRightService
         throws XWikiException
     {
         return rightService.listAllLevels(context);
+    }
+
+    @Override
+    public boolean hasWikiAdminRights(XWikiContext context)
+    {
+        try {
+            return hasAccessLevel("admin", context.getUser(), "XWiki.XWikiPreferences", context);
+        } catch (Exception e) {
+            logger.error("Failed to check wiki admin right for user [" + context.getUser() + "]", e);
+            return false;
+        }
     }
 }

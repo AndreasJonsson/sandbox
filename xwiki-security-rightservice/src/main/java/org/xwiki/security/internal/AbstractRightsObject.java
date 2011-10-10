@@ -22,7 +22,7 @@
  */
 package org.xwiki.security.internal;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.xpn.xwiki.objects.BaseObject;
 import com.xpn.xwiki.objects.classes.GroupsClass;
@@ -41,7 +41,7 @@ import java.util.EnumSet;
 
 /**
  * Wrapper around xwiki rights objects.
- * @version $Id$
+ * @version $Id: AbstractRightsObject.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public abstract class AbstractRightsObject implements RightsObject
 {

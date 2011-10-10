@@ -20,28 +20,32 @@
 package org.xwiki.security.internal;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
 import org.xwiki.model.EntityType;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.EntityReferenceResolver;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 /**
  * Specialized version of {@link org.xwiki.model.reference.EntityReferenceResolver} which can be considered a helper
  * component to resolve {@link DocumentReference} objects from their string representation.  This resolver
  * is specialized for generating document references of user and group documents.  The resolve
  * 
- * @version $Id$
+ * @version $Id: UserAndGroupReferenceResolver.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component(hints = { "user", "group" })
+@Singleton
 public class UserAndGroupReferenceResolver implements DocumentReferenceResolver<String>
 {
     /** Default user space. */
     private static final String DEFAULT_USER_SPACE = "XWiki";
 
     /** Internally used resolver. */
-    @Requirement private EntityReferenceResolver<String> resolver;
+    @Inject private EntityReferenceResolver<String> resolver;
 
     /**
      * {@inheritDoc}

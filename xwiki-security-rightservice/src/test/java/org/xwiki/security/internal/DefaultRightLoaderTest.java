@@ -70,6 +70,14 @@ public class DefaultRightLoaderTest extends AbstractTestCase
             .add(allGroupDocument);
 
         try {
+
+
+            final DocumentReference groupDocRef = new DocumentReference("xwiki", "XWiki", "GroupX");
+            final DocumentReference allGroupDocRef = new DocumentReference("wikiY", "XWiki", "XWikiAllGroup");
+            final DocumentReference groupClassRef = new DocumentReference("xwiki", "XWiki", "XWikiGroups");
+
+            final States test = mockery.states("test");
+
             mockery.checking(new Expectations() {{
                 allowing(mockGroupService)
                     .getAllGroupsNamesForMember("wikiY:XWiki.userX", Integer.MAX_VALUE, 0, xwikiContext);
@@ -77,6 +85,25 @@ public class DefaultRightLoaderTest extends AbstractTestCase
                 allowing(mockGroupService)
                     .getAllGroupsNamesForMember("wikiY:XWiki.userY", Integer.MAX_VALUE, 0, xwikiContext);
                 will(returnValue(asList(new String[]{"XWiki.XWikiAllGroup"})));
+
+                
+                allowing(mockDocumentAccessBridge).getProperty(groupDocRef, allGroupDocRef, "member");
+                will(returnValue("wikiY:XWiki.userX|wikiY:XWiki.userY"));
+
+                allowing(mockDocumentAccessBridge).getProperty(groupDocRef, groupClassRef, "member");
+                will(returnValue("wikiY:XWiki.userX"));
+                when(test.is("added-group"));
+
+                allowing(mockGroupService).getAllMembersNamesForGroup("xwiki:XWiki.GroupX", 100, 0, xwikiContext);
+                will(returnValue(asList(new String[]{"wikiY:XWiki.userX", "wikiY:XWiki.XWikiAllGroup"})));
+                when(test.is("added-group"));
+
+                allowing(mockDocumentAccessBridge).getProperty(with(any(DocumentReference.class)),
+                                                               with(any(DocumentReference.class)),
+                                                               with(any(String.class)));
+                will(returnValue(null));
+
+
             }});
 
             RightLoader loader = getComponentManager().lookup(RightLoader.class);
@@ -91,6 +118,7 @@ public class DefaultRightLoaderTest extends AbstractTestCase
             assertTrue(level.equals(edit));
 
             RightCacheEntry entry = cache.get(cache.getRightCacheKey(userX), cache.getRightCacheKey(userX));
+            System.out.println("Cache class: " + cache.getClass().getName());
             assertTrue(entry != null);
             assertTrue(entry.equals(level));
 
@@ -129,12 +157,11 @@ public class DefaultRightLoaderTest extends AbstractTestCase
             level = loader.load(userX, userX);
             assertTrue(level.equals(editNoComment));
 
-            mockery.checking(new Expectations() {{
-                allowing(mockGroupService).getAllMembersNamesForGroup("xwiki:XWiki.GroupX", 100, 0, xwikiContext);
-                will(returnValue(asList(new String[]{"wikiY:XWiki.userX"})));
-            }});
             MockDocument group = MockDocument.newGroupDocument("XWiki.GroupX", new String[] {"wikiY:XWiki.userX" } );
             wiki.add(group);
+
+            test.become("added-group");
+
             ((EventListener) invalidator).onEvent(null, group, null);
 
             entry = cache.get(cache.getRightCacheKey(userX));

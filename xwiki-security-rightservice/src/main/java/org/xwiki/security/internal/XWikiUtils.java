@@ -23,6 +23,8 @@ package org.xwiki.security.internal;
 import org.xwiki.context.Execution;
 import org.xwiki.context.ExecutionContext;
 
+import org.xwiki.bridge.DocumentAccessBridge;
+import org.xwiki.bridge.DocumentModelBridge;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.EntityReferenceSerializer;
@@ -30,7 +32,6 @@ import org.xwiki.model.reference.EntityReferenceSerializer;
 import com.xpn.xwiki.XWikiException;
 import com.xpn.xwiki.XWikiContext;
 import com.xpn.xwiki.user.api.XWikiGroupService;
-import com.xpn.xwiki.doc.XWikiDocument;
 
 import org.xwiki.security.RightServiceException;
 import org.xwiki.security.RightCache;
@@ -41,13 +42,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class contains utility functions for accessing various xwiki
  * objecst, such as the XWikiGroupService.
- * @version $Id$
+ * @version $Id: XWikiUtils.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 final class XWikiUtils
 {
@@ -63,10 +64,13 @@ final class XWikiUtils
     /** Name of group class. */
     static final String GROUP_CLASS = "XWiki.XWikiGroups";
 
+    /** Name of group class property. */
+    static final String GROUP_CLASS_PROPERTY = "member";
+
     /**
      * The logging tool.
      */
-    private static final Log LOG = LogFactory.getLog(XWikiUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XWikiUtils.class);
 
     /** Hide constructor. */
     private XWikiUtils()
@@ -160,23 +164,24 @@ final class XWikiUtils
      */
     public static boolean isGroupDocument(Object source)
     {
-        XWikiDocument doc = (XWikiDocument) source;
+        DocumentAccessBridge ab = Utils.getComponent(DocumentAccessBridge.class);
+        DocumentModelBridge doc = (DocumentModelBridge) source;
         DocumentReference docRef = doc.getDocumentReference();
         DocumentReferenceResolver<String> resolver = Utils.getComponent(DocumentReferenceResolver.class);
         DocumentReference groupClass = resolver.resolve(GROUP_CLASS, docRef);
-        List objects = doc.getXObjects(groupClass);
-        return objects != null && objects.size() > 0;
+        Object prop = ab.getProperty(docRef, groupClass, GROUP_CLASS_PROPERTY);
+        return prop != null;
     }
 
     /**
-     * Obtain a document reference to the {@link XWikiDocument} given
+     * Obtain a document reference to the {@link DocumentModelBridge} given
      * as parameter.
-     * @param xwikiDocument The xwiki document.
+     * @param documentModelBridge The xwiki document.
      * @return The document reference.
      */
-    public static DocumentReference getDocumentReference(Object xwikiDocument)
+    public static DocumentReference getDocumentReference(Object documentModelBridge)
     {
-        XWikiDocument doc = (XWikiDocument) xwikiDocument;
+        DocumentModelBridge doc = (DocumentModelBridge) documentModelBridge;
         return doc.getDocumentReference();
     }
 
@@ -212,17 +217,16 @@ final class XWikiUtils
     public static boolean isCreator(DocumentReference user, DocumentReference document)
     {
         XWikiContext context = getXWikiContext();
-        XWikiDocument doc;
+        String creator;
         try {
-            doc = context.getWiki().getDocument(document, context);
-            if (doc == null) {
+            if (context.getWiki().getDocument(document, context) == null) {
                 return false;
             }
+            creator = context.getWiki().getDocument(document, context).getCreator();
         } catch (XWikiException e) {
             LOG.error("Caught exception.", e);
             return false;
         }
-        String creator = doc.getCreator();
         DocumentReferenceResolver<String> resolver = getUserResolver();
         DocumentReference creatorRef = resolver.resolve(creator, document.getWikiReference().getName());
         return user.equals(creatorRef);

@@ -51,7 +51,7 @@ import com.xpn.xwiki.user.api.XWikiRightService;
 /**
  * Unit tests for {@link com.xpn.xwiki.user.impl.xwiki.XWikiRightServiceImpl}.
  * 
- * @version $Id$
+ * @version $Id: XWikiRightServiceTest.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class XWikiRightServiceTest extends AbstractTestCase
 {
@@ -69,8 +69,10 @@ public class XWikiRightServiceTest extends AbstractTestCase
         MockDocument preferences = new MockDocument("wiki2:XWiki.XWikiPreferences", "xwiki:XWiki.Admin");
         final XWikiRightService rightService = new XWikiCachingRightService();
 
+        final DocumentReference groupDocRef = new DocumentReference("wiki", "XWiki", "group");
+        final DocumentReference groupClassRef = new DocumentReference("xwiki", "XWiki", "XWikiGroups");
         XWikiDocument user = new XWikiDocument(new DocumentReference("wiki", "XWiki", "user"));
-        XWikiDocument group = new XWikiDocument(new DocumentReference("wiki", "XWiki", "group"));
+        XWikiDocument group = new XWikiDocument(groupDocRef);
 
         wiki.add(doc).add(preferences);
 
@@ -78,6 +80,14 @@ public class XWikiRightServiceTest extends AbstractTestCase
             allowing(mockGroupService)
                 .getAllGroupsNamesForMember("wiki:XWiki.user", Integer.MAX_VALUE, 0, xwikiContext);
             will(returnValue(asList(new String[]{"wiki:XWiki.group"})));
+
+            allowing(mockDocumentAccessBridge).getProperty(groupDocRef, groupClassRef, "member");
+            will(returnValue("wiki:XWiki.user"));
+
+            allowing(mockDocumentAccessBridge).getProperty(with(any(DocumentReference.class)),
+                                                           with(any(DocumentReference.class)),
+                                                           with(any(String.class)));
+            will(returnValue(null));
         }});
 
         getContext().setDatabase("wiki");

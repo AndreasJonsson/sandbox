@@ -23,8 +23,6 @@
 package org.xwiki.security.internal;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
-import org.xwiki.component.logging.AbstractLogEnabled;
 
 import org.xwiki.security.RightsObject;
 import org.xwiki.security.RightsObjectFactory;
@@ -40,22 +38,33 @@ import org.xwiki.context.Execution;
 import org.xwiki.model.reference.DocumentReferenceResolver;
 import org.xwiki.model.reference.DocumentReference;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.LinkedList;
 
+import org.slf4j.Logger;
+
 /**
  * Implementation of the rights object factory interface.
- * @version $Id$
+ * @version $Id: DefaultRightsObjectFactory.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component
-public class DefaultRightsObjectFactory extends AbstractLogEnabled implements RightsObjectFactory
+@Singleton
+public class DefaultRightsObjectFactory implements RightsObjectFactory
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** Resolver for user and group names. */
-    @Requirement("user") private DocumentReferenceResolver<String> resolver;
+    @Inject
+    @Named("user") private DocumentReferenceResolver<String> resolver;
 
     /** Execution object. */
-    @Requirement private Execution execution;
+    @Inject private Execution execution;
 
     @Override
     public Collection<RightsObject> getInstances(DocumentReference docRef,  boolean global)
@@ -90,7 +99,7 @@ public class DefaultRightsObjectFactory extends AbstractLogEnabled implements Ri
         if (baseObjs != null) {
             for (BaseObject obj : baseObjs) {
                 if (obj == null) {
-                    getLogger().error("There was a null object!");
+                    logger.error("There was a null object!");
                 } else {
                     rightsObjs.add(global
                                    ? new GlobalRightsObject(obj, resolver, wikiName)

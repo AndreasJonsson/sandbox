@@ -23,7 +23,7 @@ package org.xwiki.security;
 /**
  * The state of a particular rights level as determined by
  * this object.
- * @version $Id$
+ * @version $Id: RightState.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public enum RightState
 {

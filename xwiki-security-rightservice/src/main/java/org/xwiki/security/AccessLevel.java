@@ -46,7 +46,7 @@ import java.lang.ref.ReferenceQueue;
  * {@code newInstance = newInstance.reuseInstance();}
  * </li></ol>
  * After step 3. the instance is read-only.
- * @version $Id$
+ * @version $Id: AccessLevel.java 33728 2010-12-29 11:50:32Z sdumitriu $
  */
 public class AccessLevel implements RightCacheEntry, Cloneable, Comparable<AccessLevel>
 {

@@ -27,7 +27,7 @@ import java.util.Map;
 
 /**
  * Enumeration of the possible rights.
- * @version $Id$
+ * @version $Id: Right.java 33813 2011-01-05 10:21:01Z AndreasJonsson $
  */
 public enum Right
 {

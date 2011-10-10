@@ -25,7 +25,7 @@ import java.util.Collections;
 
 /**
  * Representation of an entry in the {@link RightCheckerCache}.
- * @version $Id$
+ * @version $Id: RightCacheEntry.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public interface RightCacheEntry
 {

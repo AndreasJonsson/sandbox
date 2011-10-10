@@ -26,7 +26,7 @@ import org.xwiki.cache.Cache;
 
 /**
  * Configuration component for right cache.
- * @version $Id$
+ * @version $Id: RightCacheConfiguration.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @ComponentRole
 public interface RightCacheConfiguration

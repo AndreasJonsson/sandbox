@@ -36,6 +36,7 @@ public class MockXWiki extends XWiki
 {
     Map<DocumentReference, MockDocument> documents = new HashMap();
     Map<String, String> wikiOwners = new HashMap();
+    //    private final HashMap<DocumentReference, HashMap<DocumentReference, HashMap<String, Object>>> properties = new HashMap();
 
     private final XWiki mainXWiki;
     private String cacheCapacity = "500";
@@ -92,6 +93,39 @@ public class MockXWiki extends XWiki
         }
         return userName;
     }
+
+    /*
+    @Override
+    public Object getProperty(DocumentReference docRef, DocumentReference classRef, String propertyName) {
+        HashMap<DocumentReference, HashMap<String, Object>> docProperties = properties.get(docRef);
+        if (docProperties == null) {
+            return null;
+        }
+
+        HashMap<String, Object> classProperties = docProperties.get(classRef);
+        if (classProperties == null) {
+            return null;
+        }
+
+        return classProperties.get(propertyName);
+    }
+
+    public void addProperty(DocumentReference docRef, DocumentReference classRef, String propertyName, Object value) {
+        HashMap<DocumentReference, HashMap<String, Object>> docProperties = properties.get(docRef);
+        if (docProperties == null) {
+            docProperties = new HashMap();
+            properties.put(docRef, docProperties);
+        }
+
+        HashMap<String, Object> classProperties = docProperties.get(classRef);
+        if (classProperties == null) {
+            classProperties = new HashMap();
+            properties.put(classRef, classProperties);
+        }
+        
+        classProperties.put(propertyName, value);
+    }
+    */
 
     public void setWikiOwner(String wikiName, String userName) {
         wikiOwners.put(wikiName, userName);

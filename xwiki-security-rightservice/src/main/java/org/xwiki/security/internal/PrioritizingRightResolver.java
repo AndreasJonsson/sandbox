@@ -35,6 +35,8 @@ import org.xwiki.security.RightsObject;
 import org.xwiki.model.reference.DocumentReference;
 import org.xwiki.model.reference.EntityReference;
 
+import javax.inject.Singleton;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.ListIterator;
@@ -44,9 +46,10 @@ import java.util.EnumMap;
 /**
  * The default implementation for the right resolver.
  *
- * @version $Id$
+ * @version $Id: PrioritizingRightResolver.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component("priority")
+@Singleton
 public class PrioritizingRightResolver extends AbstractRightResolver
 {
     /** Priority of rights specified for users. */

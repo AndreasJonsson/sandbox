@@ -18,46 +18,27 @@
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
  *
  */
-package org.xwiki.security;
+package org.xwiki.security.internal;
 
-/**
- * @version $Id: RightServiceException.java 30733 2010-08-24 22:22:15Z sdumitriu $
- */
-public class RightServiceException extends Exception
+import org.xwiki.security.*;
+import static org.xwiki.security.Right.*;
+import static org.xwiki.security.RightState.*;
+
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+public class DefaultRightServiceConfigurationManagerTest extends AbstractTestCase
 {
-    /**
-     * @see java.lang.Exception}. 
-     */
-    public RightServiceException()
+    @Test
+    public void testConfigurationManager()
     {
-        super();
-    }
-
-    /**
-     * @param message Message.
-     * @see java.lang.Exception.
-     */
-    public RightServiceException(String message)
-    {
-        super(message);
-    }
-    
-    /**
-     * @param message Message.
-     * @param cause Original cause.
-     * @see java.lang.Exception.
-     */
-    public RightServiceException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    /**
-     * @param cause Original cause.
-     * @see java.lang.Exception.
-     */
-    public RightServiceException(Throwable cause)
-    {
-        super(cause);
+        try {
+            RightServiceConfigurationManager cm = getComponentManager().lookup(RightServiceConfigurationManager.class);
+            
+            RightService rightService = cm.getConfiguredRightService();
+        } catch (Exception e) {
+            e.printStackTrace();
+            assert false;
+        }
     }
 }

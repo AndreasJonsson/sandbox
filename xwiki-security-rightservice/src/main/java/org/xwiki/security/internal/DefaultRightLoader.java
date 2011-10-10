@@ -27,8 +27,6 @@ import org.xwiki.model.reference.EntityReference;
 import org.xwiki.model.reference.DocumentReference;
 
 import org.xwiki.component.annotation.Component;
-import org.xwiki.component.annotation.Requirement;
-import org.xwiki.component.logging.AbstractLogEnabled;
 
 import org.xwiki.security.RightLoader;
 import org.xwiki.security.RightCache;
@@ -43,32 +41,43 @@ import org.xwiki.security.RightsObject;
 import org.xwiki.security.RightsObjectFactory;
 import org.xwiki.security.AccessLevel;
 
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
+
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Collection;
 
+import org.slf4j.Logger;
+
 /**
  * The default implementation for the right loader.
  *
- * @version $Id$
+ * @version $Id: DefaultRightLoader.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 @Component
-public class DefaultRightLoader extends AbstractLogEnabled implements RightLoader
+@Singleton
+public class DefaultRightLoader implements RightLoader
 {
+    /** Logger object. */
+    @Inject private Logger logger;
+
     /** Maximum number of attempts at loading an entry. */
     private static final int MAX_RETRIES = 5;
 
     /** Resolver for the user, group and rights objects. */
-    @Requirement("priority") private RightResolver rightResolver;
+    @Named("priority")
+    @Inject private RightResolver rightResolver;
 
     /** The right cache. */
-    @Requirement private RightCache rightCache;
+    @Inject private RightCache rightCache;
 
     /** Event listener responsible for invalidating cache entries. */
-    @Requirement private RightCacheInvalidator rightCacheInvalidator;
+    @Inject private RightCacheInvalidator rightCacheInvalidator;
 
     /** Factory object for producing RightsObject instances from the corresponding xwiki rights objects. */
-    @Requirement private RightsObjectFactory rightsObjectFactory;
+    @Inject private RightsObjectFactory rightsObjectFactory;
 
     @Override
     public AccessLevel load(DocumentReference user, EntityReference entity)
@@ -84,24 +93,24 @@ public class DefaultRightLoader extends AbstractLogEnabled implements RightLoade
                 return loadRequiredEntries(user, entity);
             } catch (ParentEntryEvictedException e) {
                 if (retries < MAX_RETRIES) {
-                    getLogger().debug("The parent entry was evicted. Have tried " 
-                                      + retries
-                                      + " times.  Trying again...");
+                    logger.debug("The parent entry was evicted. Have tried " 
+                                 + retries
+                                 + " times.  Trying again...");
                     continue RETRY;
                 }
             } catch (ConflictingInsertionException e) {
                 if (retries < MAX_RETRIES) {
-                    getLogger().debug("There were conflicting insertions.  Have tried "
-                                      + retries
-                                      + " times.  Retrying...");
+                    logger.debug("There were conflicting insertions.  Have tried "
+                                 + retries
+                                 + " times.  Retrying...");
                     continue RETRY;
                 }
             } finally {
                 rightCacheInvalidator.resume();
             }
-            getLogger().error("Failed to load the cache in "
-                              + retries
-                              + " attempts.  Giving up.");
+            logger.error("Failed to load the cache in "
+                         + retries
+                         + " attempts.  Giving up.");
             throw new RightServiceException();
         }
     }
@@ -184,10 +193,10 @@ public class DefaultRightLoader extends AbstractLogEnabled implements RightLoade
             = getRightsObjects(entityKey, entity);
 
         AccessLevel accessLevel = rightResolver.resolve(user, entity, entityKey, groups, rightsObjects);
-        getLogger().debug("Adding "
-                          + userKey.getEntityReference() + "@"
-                          + entityKey.getEntityReference() + ": "
-                          + accessLevel);
+        logger.debug("Adding "
+                     + userKey.getEntityReference() + "@"
+                     + entityKey.getEntityReference() + ": "
+                     + accessLevel);
         rightCache.addUserAtEntity(userKey, entityKey, accessLevel);
         return accessLevel;
     }
@@ -271,7 +280,7 @@ public class DefaultRightLoader extends AbstractLogEnabled implements RightLoade
                     String message = "There is an entry of type "
                         + ref.getType()
                         + " in the right cache!";
-                    getLogger().error(message);
+                    logger.error(message);
                     throw new RightServiceException(message);
             }
         }
@@ -312,9 +321,9 @@ public class DefaultRightLoader extends AbstractLogEnabled implements RightLoade
                 global = false;
                 break;
             default:
-                getLogger().error("Rights on entities of type "
-                                  + entity.getType()
-                                  + " is not supported by this loader!");
+                logger.error("Rights on entities of type "
+                             + entity.getType()
+                             + " is not supported by this loader!");
                 throw new EntityTypeNotSupportedException(entity.getType(), this);
         }
 

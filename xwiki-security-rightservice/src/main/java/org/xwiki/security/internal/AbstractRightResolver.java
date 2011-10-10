@@ -39,15 +39,21 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.EnumMap;
 
-import org.xwiki.component.logging.AbstractLogEnabled;
-import org.apache.commons.lang.StringUtils;
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+
+import org.slf4j.Logger;
 
 /**
  * Abstract super class for right resolvers.
- * @version $Id$
+ * @version $Id: AbstractRightResolver.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
-abstract class AbstractRightResolver extends AbstractLogEnabled implements RightResolver
+abstract class AbstractRightResolver implements RightResolver
 {
+    @Inject
+    protected Logger logger;
+
     /** Map for resolving conflicting rights within a document hierarchy level. */
     protected final Map<Right, RightState> tieResolution = new EnumMap(Right.class);
     /** Map to resolving configting rights between document hierarchy levels. */
@@ -82,7 +88,7 @@ abstract class AbstractRightResolver extends AbstractLogEnabled implements Right
         smallerWin.put(REGISTER, false);
         smallerWin.put(COMMENT,  true);
         smallerWin.put(ILLEGAL,  false);
-        Right[] pageRights        = {VIEW, EDIT, COMMENT, DELETE };
+        Right[] pageRights        = {VIEW, EDIT, COMMENT };
         Right[] spaceRights       = {VIEW, EDIT, COMMENT, DELETE, ADMIN }; 
         Right[] wikiRights = {VIEW, EDIT, COMMENT, DELETE, ADMIN, REGISTER, LOGIN, PROGRAM };
         enabledRights.put(EntityType.DOCUMENT, Arrays.asList(pageRights));

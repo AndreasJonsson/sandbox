@@ -24,7 +24,7 @@ import org.xwiki.model.reference.DocumentReference;
 
 /**
  * Wrapper around xwiki rights objects.
- * @version $Id$
+ * @version $Id: RightsObject.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public interface RightsObject
 {

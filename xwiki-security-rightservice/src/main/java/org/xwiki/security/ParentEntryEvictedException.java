@@ -30,7 +30,7 @@ package org.xwiki.security;
  * When this happens, this exception is thrown and the attempt to load
  * the cache must be restarted.
  *
- * @version $Id$
+ * @version $Id: ParentEntryEvictedException.java 30733 2010-08-24 22:22:15Z sdumitriu $
  */
 public class ParentEntryEvictedException extends Exception
 {
